@@ -33,6 +33,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -62,6 +63,7 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
     private DcMotor rightBackDrive = null;
     private Servo leftClawServo = null;
     private Servo rightClawServo = null;
+    private Servo topClawServo = null;
     private DcMotor armLifter = null;
 
     private double servoPosition = 0.0;
@@ -95,9 +97,9 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Drive Motor Front", "left, right", leftFrontDrive.getCurrentPosition(), rightFrontDrive.getCurrentPosition());
-            telemetry.addData("Drive Motor Back", "left, right", leftBackDrive.getCurrentPosition(), rightBackDrive.getCurrentPosition());
-            telemetry.addData("speedAdjust",  speedAdjust);
+            telemetry.addData("Drive Motor Front","left (%.2f), right (%.2f)", leftFrontDrive.getPower(), rightFrontDrive.getPower());
+            telemetry.addData("Drive Motor Back", "left (%.2f), right (%.2f)", leftBackDrive.getPower(), rightBackDrive.getPower());
+            telemetry.addData("speedAdjust","speed (%.2f)",  speedAdjust);
             telemetry.addData("Gamepad1 button pressed", gamepad1.getRobocolMsgType());
             telemetry.addData("ServoMotors", "left (%.2f), right (%.2f)", leftClawServo.getPosition(), rightClawServo.getPosition());
             telemetry.update();
@@ -112,15 +114,15 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
 
     private void driveArm()
     {
-        if ( gamepad1.dpad_up )
+        if ( gamepad1.dpad_up)// && armLifter.getPower()!=1.0 )
         {
             armMotorPower = 0.2;
         }
-        else if (gamepad1.dpad_down )
+        else if (gamepad1.dpad_down) // && armLifter.getPower() !=-1.0 )
         {
             armMotorPower = -0.2;
         }
-
+        armLifter.setPower(armMotorPower);
     }
 
     private void initializeDriveMotor()
@@ -130,10 +132,10 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         leftBackDrive = hardwareMap.get(DcMotor.class, "LeftBackDrive");
         rightBackDrive = hardwareMap.get(DcMotor.class, "RightBackDrive");
 
-        leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
-        leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
-        rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
+        rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
 
         leftFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -144,10 +146,13 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
     {
         leftClawServo = hardwareMap.get(Servo.class, "LeftClaw");
         rightClawServo = hardwareMap.get(Servo.class, "RightClaw");
+        topClawServo = hardwareMap.get(Servo.class, "TopClaw");
         leftClawServo.setDirection(Servo.Direction.FORWARD);
         rightClawServo.setDirection(Servo.Direction.REVERSE);
-        leftClawServo.setPosition(position);
-        rightClawServo.setPosition(position);
+        topClawServo.setDirection(Servo.Direction.FORWARD);
+//        leftClawServo.setPosition(position);
+//        rightClawServo.setPosition(position);
+//        topClawServo.setPosition(position);
     }
     private void driveBot()
     {
@@ -191,5 +196,6 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         // Set the servo to the new position and pause;
         leftClawServo.setPosition(position);
         rightClawServo.setPosition(position);
+        topClawServo.setPosition(position);
     }
 }
