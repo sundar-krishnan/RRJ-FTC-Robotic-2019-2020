@@ -74,6 +74,7 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
     double speedAdjust =7.0;
     double  position = 0.0; //(MAX_POS - MIN_POS) / 2; // Start at halfway position
     double armMotorPower=0.0;
+    int targetPosition = 100;
 
     @Override
     public void runOpMode()
@@ -91,7 +92,8 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
-            driveBot();
+//            driveBot();
+            driveBot2();
             driveClaws();
             driveArm();
 
@@ -107,21 +109,80 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         }
     }
 
+    private void driveBot2()
+    {
+        if (gamepad1.left_stick_x >0.0)
+        {
+            leftBackDrive.setPower(1.0);
+            rightBackDrive.setPower(-1.0);
+            leftFrontDrive.setPower(-1.0);
+            rightFrontDrive.setPower(1.0);
+        }
+        else if(gamepad1.left_stick_x <0.0)
+        {
+            leftBackDrive.setPower(-1.0);
+            rightBackDrive.setPower(1.0);
+            leftFrontDrive.setPower(1.0);
+            rightFrontDrive.setPower(-1.0);
+
+        }
+        else if(gamepad1.right_stick_x <0.0)
+        {
+            leftBackDrive.setPower(1.0);
+            rightBackDrive.setPower(-1.0);
+            leftFrontDrive.setPower(1.0);
+            rightFrontDrive.setPower(-1.0);
+
+        }
+        else if(gamepad1.right_stick_x > 0.0)
+        {
+            leftBackDrive.setPower(-1.0);
+            rightBackDrive.setPower(1.0);
+            leftFrontDrive.setPower(-1.0);
+            rightFrontDrive.setPower(1.0);
+
+        }
+        else
+        {
+            leftBackDrive.setPower(gamepad1.left_stick_y);
+            rightBackDrive.setPower(gamepad1.left_stick_y);
+            leftFrontDrive.setPower(gamepad1.left_stick_y);
+            rightFrontDrive.setPower(gamepad1.left_stick_y);
+        }
+//        leftBackDrive.setPower((gamepad1.left_stick_y + gamepad1.left_stick_x + gamepad1.right_stick_x));
+//        rightBackDrive.setPower((gamepad1.left_stick_y + gamepad1.left_stick_x - gamepad1.right_stick_x));
+//        leftFrontDrive.setPower((gamepad1.left_stick_y - gamepad1.left_stick_x + gamepad1.right_stick_x));
+//        rightFrontDrive.setPower((gamepad1.left_stick_y - gamepad1.left_stick_x - gamepad1.right_stick_x));
+    }
+
     private void initializeArmMotor()
     {
         armLifter = hardwareMap.get(DcMotor.class, "ArmLifter");
+        armLifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        armLifter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        armLifter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //armLifter.setDirection(DcMotor.Direction.FORWARD);
     }
 
     private void driveArm()
     {
-        if ( gamepad1.dpad_up)// && armLifter.getPower()!=1.0 )
-        {
-            armMotorPower = 0.2;
-        }
-        else if (gamepad1.dpad_down) // && armLifter.getPower() !=-1.0 )
-        {
-            armMotorPower = -0.2;
-        }
+        if ( gamepad1.dpad_up)
+            {
+                targetPosition += 100;
+                armMotorPower = 1.0;
+            }
+        else if (gamepad1.dpad_down  )
+            {
+                targetPosition -= 100;
+                armMotorPower = 1.0;
+            }
+        else
+            {
+                targetPosition = 0;
+                armMotorPower = 0.0;
+            }
+        armLifter.setTargetPosition(targetPosition);
+        armLifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         armLifter.setPower(armMotorPower);
     }
 
@@ -132,10 +193,10 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         leftBackDrive = hardwareMap.get(DcMotor.class, "LeftBackDrive");
         rightBackDrive = hardwareMap.get(DcMotor.class, "RightBackDrive");
 
-        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
-        leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
-        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
+        leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
+        leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
+        rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
 
         leftFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -150,9 +211,9 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         leftClawServo.setDirection(Servo.Direction.FORWARD);
         rightClawServo.setDirection(Servo.Direction.REVERSE);
         topClawServo.setDirection(Servo.Direction.FORWARD);
-//        leftClawServo.setPosition(position);
-//        rightClawServo.setPosition(position);
-//        topClawServo.setPosition(position);
+        leftClawServo.setPosition(position);
+        rightClawServo.setPosition(position);
+        topClawServo.setPosition(position);
     }
     private void driveBot()
     {
