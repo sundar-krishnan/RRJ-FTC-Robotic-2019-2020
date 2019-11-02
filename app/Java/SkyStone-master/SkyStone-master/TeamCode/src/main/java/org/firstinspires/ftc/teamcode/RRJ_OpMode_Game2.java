@@ -74,7 +74,7 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
     double speedAdjust =7.0;
     double  position = 0.0; //(MAX_POS - MIN_POS) / 2; // Start at halfway position
     double armMotorPower=0.0;
-    int targetPosition = 100;
+    int targetPosition = 1;
 
     @Override
     public void runOpMode()
@@ -162,24 +162,33 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         armLifter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         armLifter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         //armLifter.setDirection(DcMotor.Direction.FORWARD);
+        //armLifter.setTargetPosition(200);
+        //armLifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //armLifter.setPower(1.0);
     }
 
     private void driveArm()
     {
         if ( gamepad1.dpad_up)
             {
-                targetPosition += 100;
+                targetPosition += 1;
                 armMotorPower = 1.0;
+                telemetry.addData("Status", "Run Time: " + runtime.toString());
+                telemetry.update();
             }
         else if (gamepad1.dpad_down  )
             {
-                targetPosition -= 100;
+                targetPosition -= 1;
                 armMotorPower = 1.0;
+                telemetry.addData("Status", "Run Time: " + runtime.toString());
+                telemetry.update();
             }
         else
             {
                 targetPosition = 0;
                 armMotorPower = 0.0;
+                telemetry.addData("Status", "Run Time: " + runtime.toString());
+                telemetry.update();
             }
         armLifter.setTargetPosition(targetPosition);
         armLifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
