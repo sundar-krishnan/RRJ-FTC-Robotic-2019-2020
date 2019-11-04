@@ -104,6 +104,8 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
             telemetry.addData("speedAdjust","speed (%.2f)",  speedAdjust);
             telemetry.addData("Gamepad1 button pressed", gamepad1.getRobocolMsgType());
             telemetry.addData("ServoMotors", "left (%.2f), right (%.2f)", leftClawServo.getPosition(), rightClawServo.getPosition());
+            telemetry.addData("targetPosition", "ArmTargetPosition: " + armLifter.getTargetPosition());
+            telemetry.addData("armLifterDirection", "ArmLifterDirection: " + armLifter.getDirection());
             telemetry.update();
 
         }
@@ -111,14 +113,14 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
 
     private void driveBot2()
     {
-        if (gamepad1.left_stick_x >0.0)
+        if (gamepad1.right_stick_x >0.0)
         {
             leftBackDrive.setPower(1.0);
             rightBackDrive.setPower(-1.0);
             leftFrontDrive.setPower(-1.0);
             rightFrontDrive.setPower(1.0);
         }
-        else if(gamepad1.left_stick_x <0.0)
+        else if(gamepad1.right_stick_x <0.0)
         {
             leftBackDrive.setPower(-1.0);
             rightBackDrive.setPower(1.0);
@@ -126,7 +128,7 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
             rightFrontDrive.setPower(-1.0);
 
         }
-        else if(gamepad1.right_stick_x <0.0)
+        else if(gamepad1.left_stick_x <0.0)
         {
             leftBackDrive.setPower(1.0);
             rightBackDrive.setPower(-1.0);
@@ -134,7 +136,7 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
             rightFrontDrive.setPower(-1.0);
 
         }
-        else if(gamepad1.right_stick_x > 0.0)
+        else if(gamepad1.left_stick_x > 0.0)
         {
             leftBackDrive.setPower(-1.0);
             rightBackDrive.setPower(1.0);
@@ -144,10 +146,10 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         }
         else
         {
-            leftBackDrive.setPower(gamepad1.left_stick_y);
-            rightBackDrive.setPower(gamepad1.left_stick_y);
-            leftFrontDrive.setPower(gamepad1.left_stick_y);
-            rightFrontDrive.setPower(gamepad1.left_stick_y);
+            leftBackDrive.setPower(gamepad1.right_stick_y);
+            rightBackDrive.setPower(gamepad1.right_stick_y);
+            leftFrontDrive.setPower(gamepad1.right_stick_y);
+            rightFrontDrive.setPower(gamepad1.right_stick_y);
         }
 //        leftBackDrive.setPower((gamepad1.left_stick_y + gamepad1.left_stick_x + gamepad1.right_stick_x));
 //        rightBackDrive.setPower((gamepad1.left_stick_y + gamepad1.left_stick_x - gamepad1.right_stick_x));
@@ -161,7 +163,7 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         armLifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         armLifter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         armLifter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        //armLifter.setDirection(DcMotor.Direction.FORWARD);
+        armLifter.setDirection(DcMotor.Direction.FORWARD);
         //armLifter.setTargetPosition(200);
         //armLifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         //armLifter.setPower(1.0);
@@ -171,24 +173,18 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
     {
         if ( gamepad1.dpad_up)
             {
-                targetPosition += 1;
-                armMotorPower = 1.0;
-                telemetry.addData("Status", "Run Time: " + runtime.toString());
-                telemetry.update();
+                targetPosition = 10;
+                armMotorPower = 0.5;
             }
-        else if (gamepad1.dpad_down  )
+        else if (gamepad1.dpad_down)
             {
-                targetPosition -= 1;
-                armMotorPower = 1.0;
-                telemetry.addData("Status", "Run Time: " + runtime.toString());
-                telemetry.update();
+                targetPosition = -10;
+                armMotorPower = -0.5;
             }
         else
             {
                 targetPosition = 0;
                 armMotorPower = 0.0;
-                telemetry.addData("Status", "Run Time: " + runtime.toString());
-                telemetry.update();
             }
         armLifter.setTargetPosition(targetPosition);
         armLifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
