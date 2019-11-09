@@ -74,7 +74,7 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
     double speedAdjust =7.0;
     double  position = 0.0; //(MAX_POS - MIN_POS) / 2; // Start at halfway position
     double armMotorPower=0.0;
-    int targetPosition = 1;
+    int targetPosition = -5300;
 
     @Override
     public void runOpMode()
@@ -87,7 +87,7 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         initializeArmMotor();
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
-        runtime.reset();
+        //runtime.reset();
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -161,34 +161,51 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
     {
         armLifter = hardwareMap.get(DcMotor.class, "ArmLifter");
         armLifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        targetPosition = armLifter.getTargetPosition();
         armLifter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         armLifter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        armLifter.setDirection(DcMotor.Direction.FORWARD);
-        //armLifter.setTargetPosition(200);
+//        armLifter.setTargetPosition(targetPosition);
+        armLifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //armLifter.setDirection(DcMotor.Direction.FORWARD);
+        armLifter.setTargetPosition(0);
         //armLifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         //armLifter.setPower(1.0);
     }
 
     private void driveArm()
     {
-        if ( gamepad1.dpad_up)
+        if ( gamepad1.dpad_up )
             {
-                targetPosition = 10;
+                targetPosition += 10;
                 armMotorPower = 0.5;
             }
-        else if (gamepad1.dpad_down)
+        else if (gamepad1.dpad_down )
             {
-                targetPosition = -10;
+                targetPosition -= 10;
                 armMotorPower = -0.5;
             }
         else
             {
-                targetPosition = 0;
+//                targetPosition = 0;
                 armMotorPower = 0.0;
             }
+
         armLifter.setTargetPosition(targetPosition);
         armLifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         armLifter.setPower(armMotorPower);
+        targetPosition = armLifter.getTargetPosition();
+//        while (opModeIsActive() && armLifter.isBusy())
+//        {
+//            telemetry.addData("encoder",armLifter.getCurrentPosition() + "busy= " + armLifter.isBusy());
+//            telemetry.update();
+//            idle();
+//            sleep(1000);
+//        }
+
+//        armLifter.setTargetPosition(0);
+//        armLifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        armLifter.setPower(0);
+//        armLifter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     private void initializeDriveMotor()
