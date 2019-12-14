@@ -64,17 +64,23 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
     private Servo leftClawServo = null;
     private Servo rightClawServo = null;
     private Servo topClawServo = null;
+    private Servo clawWristServo = null;
     private DcMotor armLifter = null;
 
     private double servoPosition = 0.0;
     static final double INCREMENT = 0.1;     // amount to slew servo each CYCLE_MS cycle
+    static final double INCREMENTWRIST = 0.1;
     static final int    CYCLE_MS  =  100;     // period of each cycle
-    static final double MAX_POS   =  0.4;     // Maximum rotational position
+    static final double MAX_POS   =  0.7;     // Maximum rotational position
     static final double MIN_POS   =  0.0;     // Minimum rotational position
+    static final double MAX_POS_WRIST   =  0.8;     // Maximum rotational position
+    static final double MIN_POS_WRIST    =  0.2;     // Minimum rotational position
     double speedAdjust =7.0;
     double  position = 0.0; //(MAX_POS - MIN_POS) / 2; // Start at halfway position
-    double armMotorPower=0.0;
-    int targetPosition = -5300;
+    double  positionWrist = 0.0;
+    double armMotorPower=1.0;
+    int targetPosition = 0;
+    double drivePower = 0.5;
 
     @Override
     public void runOpMode()
@@ -85,6 +91,7 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         initializeDriveMotor();
         initializeServoMotor();
         initializeArmMotor();
+        initializeServoMotorWrist();
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         //runtime.reset();
@@ -96,6 +103,7 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
             driveBot2();
             driveClaws();
             driveArm();
+            driveClawWrist();
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
@@ -104,8 +112,9 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
             telemetry.addData("speedAdjust","speed (%.2f)",  speedAdjust);
             telemetry.addData("Gamepad1 button pressed", gamepad1.getRobocolMsgType());
             telemetry.addData("ServoMotors", "left (%.2f), right (%.2f)", leftClawServo.getPosition(), rightClawServo.getPosition());
-            telemetry.addData("targetPosition", "ArmTargetPosition: " + armLifter.getTargetPosition());
+            telemetry.addData("ArmTargetPosition", "ArmTargetPosition: " + armLifter.getTargetPosition());
             telemetry.addData("armLifterDirection", "ArmLifterDirection: " + armLifter.getDirection());
+            telemetry.addData("topClawServo", "topClawServo: " + topClawServo.getPosition() + " Direction " + topClawServo.getDirection());
             telemetry.update();
 
         }
@@ -113,43 +122,51 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
 
     private void driveBot2()
     {
-        if (gamepad1.right_stick_x >0.0)
+        if (gamepad1.right_stick_x > 0.0)
         {
-            leftBackDrive.setPower(1.0);
-            rightBackDrive.setPower(-1.0);
-            leftFrontDrive.setPower(-1.0);
-            rightFrontDrive.setPower(1.0);
+            leftBackDrive.setPower(drivePower);
+            rightBackDrive.setPower(-drivePower);
+            leftFrontDrive.setPower(-drivePower);
+            rightFrontDrive.setPower(drivePower);
         }
-        else if(gamepad1.right_stick_x <0.0)
+        else if(gamepad1.right_stick_x < 0.0)
         {
-            leftBackDrive.setPower(-1.0);
-            rightBackDrive.setPower(1.0);
-            leftFrontDrive.setPower(1.0);
-            rightFrontDrive.setPower(-1.0);
+            leftBackDrive.setPower(-drivePower);
+            rightBackDrive.setPower(drivePower);
+            leftFrontDrive.setPower(drivePower);
+            rightFrontDrive.setPower(-drivePower);
 
         }
-        else if(gamepad1.left_stick_x <0.0)
+        else if(gamepad1.left_stick_x < 0.0)
         {
-            leftBackDrive.setPower(1.0);
-            rightBackDrive.setPower(-1.0);
-            leftFrontDrive.setPower(1.0);
-            rightFrontDrive.setPower(-1.0);
+            leftBackDrive.setPower(drivePower);
+            rightBackDrive.setPower(-drivePower);
+            leftFrontDrive.setPower(drivePower);
+            rightFrontDrive.setPower(-drivePower);
 
         }
         else if(gamepad1.left_stick_x > 0.0)
         {
-            leftBackDrive.setPower(-1.0);
-            rightBackDrive.setPower(1.0);
-            leftFrontDrive.setPower(-1.0);
-            rightFrontDrive.setPower(1.0);
+            leftBackDrive.setPower(-drivePower);
+            rightBackDrive.setPower(drivePower);
+            leftFrontDrive.setPower(-drivePower);
+            rightFrontDrive.setPower(drivePower);
 
         }
+//        else if(gamepad1.right_stick_y != 0)
+//        {
+//            leftBackDrive.setPower(drivePower);
+//            rightBackDrive.setPower(drivePower);
+//            leftFrontDrive.setPower(drivePower);
+//            rightFrontDrive.setPower(drivePower);
+//        }
+//        else if(gamepad1.right_stick_y == 0)
         else
         {
-            leftBackDrive.setPower(gamepad1.right_stick_y);
-            rightBackDrive.setPower(gamepad1.right_stick_y);
-            leftFrontDrive.setPower(gamepad1.right_stick_y);
-            rightFrontDrive.setPower(gamepad1.right_stick_y);
+            leftBackDrive.setPower(gamepad1.right_stick_y/2.0);
+            rightBackDrive.setPower(gamepad1.right_stick_y/2.0);
+            leftFrontDrive.setPower(gamepad1.right_stick_y/2.0);
+            rightFrontDrive.setPower(gamepad1.right_stick_y/2.0);
         }
 //        leftBackDrive.setPower((gamepad1.left_stick_y + gamepad1.left_stick_x + gamepad1.right_stick_x));
 //        rightBackDrive.setPower((gamepad1.left_stick_y + gamepad1.left_stick_x - gamepad1.right_stick_x));
@@ -164,36 +181,33 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         targetPosition = armLifter.getTargetPosition();
         armLifter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         armLifter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        armLifter.setTargetPosition(targetPosition);
+        armLifter.setTargetPosition(200);
         armLifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         //armLifter.setDirection(DcMotor.Direction.FORWARD);
-        armLifter.setTargetPosition(0);
+        //armLifter.setTargetPosition(0);
         //armLifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         //armLifter.setPower(1.0);
     }
 
     private void driveArm()
     {
-        if ( gamepad1.dpad_up )
+        if ( gamepad1.dpad_down  )
             {
-                targetPosition += 10;
+                if (targetPosition < 0) {targetPosition = 0;}
+                targetPosition += 2;
                 armMotorPower = 0.5;
             }
-        else if (gamepad1.dpad_down )
+        else if (gamepad1.dpad_up )
             {
-                targetPosition -= 10;
+                if (targetPosition > 0) {targetPosition = 0;}
+                targetPosition -= 2;
                 armMotorPower = -0.5;
             }
         else
             {
-//                targetPosition = 0;
+                targetPosition = 0;
                 armMotorPower = 0.0;
             }
-
-        armLifter.setTargetPosition(targetPosition);
-        armLifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        armLifter.setPower(armMotorPower);
-        targetPosition = armLifter.getTargetPosition();
 //        while (opModeIsActive() && armLifter.isBusy())
 //        {
 //            telemetry.addData("encoder",armLifter.getCurrentPosition() + "busy= " + armLifter.isBusy());
@@ -201,6 +215,11 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
 //            idle();
 //            sleep(1000);
 //        }
+        armLifter.setTargetPosition(targetPosition);
+        armLifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        armLifter.setPower(armMotorPower);
+        targetPosition = armLifter.getTargetPosition();
+
 
 //        armLifter.setTargetPosition(0);
 //        armLifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -215,10 +234,10 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         leftBackDrive = hardwareMap.get(DcMotor.class, "LeftBackDrive");
         rightBackDrive = hardwareMap.get(DcMotor.class, "RightBackDrive");
 
-        leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
-        leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
-        rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
+        rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
 
         leftFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -237,6 +256,15 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         rightClawServo.setPosition(position);
         topClawServo.setPosition(position);
     }
+
+    private void initializeServoMotorWrist()
+    {
+        clawWristServo = hardwareMap.get(Servo.class, "ClawWrist");
+        clawWristServo.setDirection(Servo.Direction.FORWARD);
+        positionWrist = clawWristServo.getPosition();
+        clawWristServo.setPosition(positionWrist);
+    }
+
     private void driveBot()
     {
         if(gamepad1.dpad_left ==true)
@@ -280,5 +308,31 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         leftClawServo.setPosition(position);
         rightClawServo.setPosition(position);
         topClawServo.setPosition(position);
+    }
+
+    private void  driveClawWrist()
+    {
+        // slew the servo, according to the rampUp (direction) variable.
+        if (positionWrist!=MAX_POS_WRIST && gamepad1.right_bumper)
+        {
+            // Keep stepping up until we hit the max value.
+            positionWrist += INCREMENTWRIST ;
+            if (positionWrist >= MAX_POS_WRIST )
+            {
+                positionWrist = MAX_POS_WRIST;
+            }
+        }
+        else if (positionWrist != MIN_POS_WRIST && gamepad1.left_bumper)
+        {
+            // Keep stepping down until we hit the min value.
+            positionWrist -= INCREMENTWRIST ;
+            if (positionWrist <= MIN_POS_WRIST )
+            {
+                positionWrist = MIN_POS_WRIST;
+
+            }
+        }
+        // Set the servo to the new position and pause;
+        clawWristServo.setPosition(positionWrist);
     }
 }
