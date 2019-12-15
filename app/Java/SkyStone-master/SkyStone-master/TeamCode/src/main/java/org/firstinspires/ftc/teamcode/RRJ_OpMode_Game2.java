@@ -74,7 +74,7 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
     static final double MAX_POS   =  0.7;     // Maximum rotational position
     static final double MIN_POS   =  0.0;     // Minimum rotational position
     static final double MAX_POS_WRIST   =  0.8;     // Maximum rotational position
-    static final double MIN_POS_WRIST    =  0.2;     // Minimum rotational position
+    static final double MIN_POS_WRIST    =  0.0;     // Minimum rotational position
     double speedAdjust =7.0;
     double  position = 0.0; //(MAX_POS - MIN_POS) / 2; // Start at halfway position
     double  positionWrist = 0.0;
