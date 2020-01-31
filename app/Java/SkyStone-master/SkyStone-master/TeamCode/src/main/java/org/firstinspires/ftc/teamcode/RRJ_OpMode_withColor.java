@@ -29,6 +29,12 @@
 
 package org.firstinspires.ftc.teamcode;
 
+// NKR
+import android.app.Activity;
+import android.graphics.Color;
+import android.view.View;
+// NKR
+
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -36,6 +42,17 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+// NKR
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
+import com.qualcomm.robotcore.hardware.SwitchableLight;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import java.util.Locale;
+
+// NKR
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
@@ -50,9 +67,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="RRJ_OpMode_Game2", group="Linear Opmode")
-//@Disabled
-public class RRJ_OpMode_Game2 extends LinearOpMode {
+@TeleOp(name="RRJ_OpMode_withColor", group="Linear Opmode")
+@Disabled
+public class RRJ_OpMode_withColor extends LinearOpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -63,30 +80,38 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
     private Servo leftClawServo = null;
     private Servo rightClawServo = null;
     private Servo topClawServo = null;
-    private Servo leftClawWristServo = null;
-    private Servo rightClawWristServo = null;
+    private Servo clawWristServo = null;
     private DcMotor armLifter = null;
 
     private double servoPosition = 0.0;
     static final double INCREMENT = 0.1;     // amount to slew servo each CYCLE_MS cycle
     static final double INCREMENTWRIST = 0.1;
-    static final int    CYCLE_MS  =  100;     // period of each cycle
-    static final double MAX_POS   =  0.7;     // Maximum rotational position
-    static final double MIN_POS   =  0.0;     // Minimum rotational position
-    static final double MAX_POS_WRIST   =  0.3;     // Maximum rotational position
-    static final double MIN_POS_WRIST    =  0.8;     // Minimum rotational position
-    double speedAdjust =7.0;
-    double  position = 0.0; //(MAX_POS - MIN_POS) / 2; // Start at halfway position
-    double  positionWrist = 5.0;
-    double armMotorPower=1.0;
+    static final int CYCLE_MS = 100;     // period of each cycle
+    static final double MAX_POS = 0.7;     // Maximum rotational position
+    static final double MIN_POS = 0.0;     // Minimum rotational position
+    static final double MAX_POS_WRIST = 0.0;     // Maximum rotational position
+    static final double MIN_POS_WRIST = 1.0;     // Minimum rotational position
+    double speedAdjust = 7.0;
+    double position = 0.0; //(MAX_POS - MIN_POS) / 2; // Start at halfway position
+    double positionWrist = 5.0;
+    double armMotorPower = 1.0;
     int targetPosition = 0;
     double drivePower = 0.5;
 
+
+    // NKR
+    // values is a reference to the hsvValues array.
+    ColorSensor sensorColor;
+    DistanceSensor sensorDistance;
+    // NKR
+
     @Override
-    public void runOpMode()
-    {
+    public void runOpMode() {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
+        float hsvValues[] = {0F, 0F, 0F};
+        final float values[] = hsvValues;
+        final double SCALE_FACTOR = 255;
 
         initializeDriveMotor();
         initializeServoMotor();
@@ -95,6 +120,18 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         //runtime.reset();
+
+        // NKR
+        // get a reference to the color sensor and distance sensor.
+        sensorColor = hardwareMap.get(ColorSensor.class, "sensor_color_distance");
+        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_color_distance");
+//        float hsvValues[] = {0F, 0F, 0F};
+//        final float values[] = hsvValues;
+//        final double SCALE_FACTOR = 255;
+        int relativeLayoutId = hardwareMap.appContext.getResources().getIdentifier("RelativeLayout", "id", hardwareMap.appContext.getPackageName());
+        final View relativeLayout = ((Activity) hardwareMap.appContext).findViewById(relativeLayoutId);
+
+        // NKR
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -107,47 +144,69 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Drive Motor Front","left (%.2f), right (%.2f)", leftFrontDrive.getPower(), rightFrontDrive.getPower());
+            telemetry.addData("Drive Motor Front", "left (%.2f), right (%.2f)", leftFrontDrive.getPower(), rightFrontDrive.getPower());
             telemetry.addData("Drive Motor Back", "left (%.2f), right (%.2f)", leftBackDrive.getPower(), rightBackDrive.getPower());
-            telemetry.addData("speedAdjust","speed (%.2f)",  speedAdjust);
+            telemetry.addData("speedAdjust", "speed (%.2f)", speedAdjust);
             telemetry.addData("Gamepad1 button pressed", gamepad1.getRobocolMsgType());
             telemetry.addData("ServoMotors", "left (%.2f), right (%.2f)", leftClawServo.getPosition(), rightClawServo.getPosition());
             telemetry.addData("ArmTargetPosition", "ArmTargetPosition: " + armLifter.getTargetPosition());
             telemetry.addData("armLifterDirection", "ArmLifterDirection: " + armLifter.getDirection());
             telemetry.addData("topClawServo", "topClawServo: " + topClawServo.getPosition() + " Direction " + topClawServo.getDirection());
-            telemetry.addData("RightWristClawServo", "RightWristClawServo: " + rightClawWristServo.getPosition());
-            telemetry.addData("LeftWristClawServo", "LeftWristClawServo: " + leftClawWristServo.getPosition());
+            telemetry.addData("WristClawServo", "WristClawServo: " + clawWristServo.getPosition());
+            telemetry.addData("Color", "Color: " + clawWristServo.getPosition());
+
+            // NKR
+            // convert the RGB values to HSV values.
+            // multiply by the SCALE_FACTOR.
+            // then cast it back to int (SCALE_FACTOR is a double)
+            Color.RGBToHSV((int) (sensorColor.red() * SCALE_FACTOR),
+                    (int) (sensorColor.green() * SCALE_FACTOR),
+                    (int) (sensorColor.blue() * SCALE_FACTOR),
+                    hsvValues);
+
+            // send the info back to driver station using telemetry function.
+            telemetry.addData("Distance (cm)",
+                    String.format(Locale.US, "%.02f", sensorDistance.getDistance(DistanceUnit.CM)));
+            telemetry.addData("Alpha", sensorColor.alpha());
+            telemetry.addData("Red  ", sensorColor.red());
+            telemetry.addData("Green", sensorColor.green());
+            telemetry.addData("Blue ", sensorColor.blue());
+            telemetry.addData("Hue", hsvValues[0]);
+
+            // change the background color to match the color detected by the RGB sensor.
+            // pass a reference to the hue, saturation, and value array as an argument
+            // to the HSVToColor method.
+            relativeLayout.post(new Runnable() {
+                public void run() {
+                    relativeLayout.setBackgroundColor(Color.HSVToColor(0xff, values));
+                }
+            });
+
+            // NKR
+
             telemetry.update();
         }
     }
 
-    private void driveBot2()
-    {
-        if (gamepad1.right_stick_x > 0.0)
-        {
+    private void driveBot2() {
+        if (gamepad1.right_stick_x > 0.0) {
             leftBackDrive.setPower(drivePower);
             rightBackDrive.setPower(-drivePower);
             leftFrontDrive.setPower(-drivePower);
             rightFrontDrive.setPower(drivePower);
-        }
-        else if(gamepad1.right_stick_x < 0.0)
-        {
+        } else if (gamepad1.right_stick_x < 0.0) {
             leftBackDrive.setPower(-drivePower);
             rightBackDrive.setPower(drivePower);
             leftFrontDrive.setPower(drivePower);
             rightFrontDrive.setPower(-drivePower);
 
-        }
-        else if(gamepad1.left_stick_x < 0.0)
-        {
+        } else if (gamepad1.left_stick_x < 0.0) {
             leftBackDrive.setPower(drivePower);
             rightBackDrive.setPower(-drivePower);
             leftFrontDrive.setPower(drivePower);
             rightFrontDrive.setPower(-drivePower);
 
-        }
-        else if(gamepad1.left_stick_x > 0.0)
-        {
+        } else if (gamepad1.left_stick_x > 0.0) {
             leftBackDrive.setPower(-drivePower);
             rightBackDrive.setPower(drivePower);
             leftFrontDrive.setPower(-drivePower);
@@ -162,12 +221,11 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
 //            rightFrontDrive.setPower(drivePower);
 //        }
 //        else if(gamepad1.right_stick_y == 0)
-        else
-        {
-            leftBackDrive.setPower(gamepad1.right_stick_y/2.0);
-            rightBackDrive.setPower(gamepad1.right_stick_y/2.0);
-            leftFrontDrive.setPower(gamepad1.right_stick_y/2.0);
-            rightFrontDrive.setPower(gamepad1.right_stick_y/2.0);
+        else {
+            leftBackDrive.setPower(gamepad1.right_stick_y / 2.0);
+            rightBackDrive.setPower(gamepad1.right_stick_y / 2.0);
+            leftFrontDrive.setPower(gamepad1.right_stick_y / 2.0);
+            rightFrontDrive.setPower(gamepad1.right_stick_y / 2.0);
         }
 //        leftBackDrive.setPower((gamepad1.left_stick_y + gamepad1.left_stick_x + gamepad1.right_stick_x));
 //        rightBackDrive.setPower((gamepad1.left_stick_y + gamepad1.left_stick_x - gamepad1.right_stick_x));
@@ -175,8 +233,7 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
 //        rightFrontDrive.setPower((gamepad1.left_stick_y - gamepad1.left_stick_x - gamepad1.right_stick_x));
     }
 
-    private void initializeArmMotor()
-    {
+    private void initializeArmMotor() {
         armLifter = hardwareMap.get(DcMotor.class, "ArmLifter");
         armLifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         targetPosition = armLifter.getTargetPosition();
@@ -190,25 +247,23 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         //armLifter.setPower(1.0);
     }
 
-    private void driveArm()
-    {
-        if ( gamepad1.dpad_down  )
-            {
-                if (targetPosition < 0) {targetPosition = 0;}
-                targetPosition += 2;
-                armMotorPower = 0.5;
-            }
-        else if (gamepad1.dpad_up )
-            {
-                if (targetPosition > 0) {targetPosition = 0;}
-                targetPosition -= 2;
-                armMotorPower = -0.5;
-            }
-        else
-            {
+    private void driveArm() {
+        if (gamepad1.dpad_down) {
+            if (targetPosition < 0) {
                 targetPosition = 0;
-                armMotorPower = 0.0;
             }
+            targetPosition += 2;
+            armMotorPower = 0.5;
+        } else if (gamepad1.dpad_up) {
+            if (targetPosition > 0) {
+                targetPosition = 0;
+            }
+            targetPosition -= 2;
+            armMotorPower = -0.5;
+        } else {
+            targetPosition = 0;
+            armMotorPower = 0.0;
+        }
 //        while (opModeIsActive() && armLifter.isBusy())
 //        {
 //            telemetry.addData("encoder",armLifter.getCurrentPosition() + "busy= " + armLifter.isBusy());
@@ -228,8 +283,7 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
 //        armLifter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
-    private void initializeDriveMotor()
-    {
+    private void initializeDriveMotor() {
         leftFrontDrive = hardwareMap.get(DcMotor.class, "LeftFrontDrive");
         rightFrontDrive = hardwareMap.get(DcMotor.class, "RightFrontDrive");
         leftBackDrive = hardwareMap.get(DcMotor.class, "LeftBackDrive");
@@ -245,8 +299,8 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         rightBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
-    private void initializeServoMotor()
-    {
+
+    private void initializeServoMotor() {
         leftClawServo = hardwareMap.get(Servo.class, "LeftClaw");
         rightClawServo = hardwareMap.get(Servo.class, "RightClaw");
         topClawServo = hardwareMap.get(Servo.class, "TopClaw");
@@ -258,54 +312,39 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         topClawServo.setPosition(position);
     }
 
-    private void initializeServoMotorWrist()
-    {
-        leftClawWristServo = hardwareMap.get(Servo.class, "LeftClawWrist");
-        leftClawWristServo.setDirection(Servo.Direction.FORWARD);
-        positionWrist = leftClawWristServo.getPosition();
-        leftClawWristServo.setPosition(0.9);
-
-        rightClawWristServo = hardwareMap.get(Servo.class, "RightClawWrist");
-        rightClawWristServo.setDirection(Servo.Direction.FORWARD);
-        positionWrist = rightClawWristServo.getPosition();
-        rightClawWristServo.setPosition(0);
+    private void initializeServoMotorWrist() {
+        clawWristServo = hardwareMap.get(Servo.class, "ClawWrist");
+        clawWristServo.setDirection(Servo.Direction.FORWARD);
+        positionWrist = clawWristServo.getPosition();
+        clawWristServo.setPosition(positionWrist);
     }
 
-    private void driveBot()
-    {
-        if(gamepad1.dpad_left ==true)
-        {
-            speedAdjust -=1;
+    private void driveBot() {
+        if (gamepad1.dpad_left == true) {
+            speedAdjust -= 1;
         }
-        if(gamepad1.dpad_right ==true)
-        {
-            speedAdjust +=1;
+        if (gamepad1.dpad_right == true) {
+            speedAdjust += 1;
         }
 
-        leftBackDrive.setPower((gamepad1.left_stick_y - gamepad1.left_stick_x - gamepad1.right_stick_x)*(-speedAdjust/10));
-        rightBackDrive.setPower((gamepad1.left_stick_y - gamepad1.left_stick_x + gamepad1.right_stick_x)*(-speedAdjust/10));
-        leftFrontDrive.setPower((gamepad1.left_stick_y + gamepad1.left_stick_x - gamepad1.right_stick_x)*(-speedAdjust/10));
-        rightFrontDrive.setPower((gamepad1.left_stick_y + gamepad1.left_stick_x + gamepad1.right_stick_x)*(-speedAdjust/10));
+        leftBackDrive.setPower((gamepad1.left_stick_y - gamepad1.left_stick_x - gamepad1.right_stick_x) * (-speedAdjust / 10));
+        rightBackDrive.setPower((gamepad1.left_stick_y - gamepad1.left_stick_x + gamepad1.right_stick_x) * (-speedAdjust / 10));
+        leftFrontDrive.setPower((gamepad1.left_stick_y + gamepad1.left_stick_x - gamepad1.right_stick_x) * (-speedAdjust / 10));
+        rightFrontDrive.setPower((gamepad1.left_stick_y + gamepad1.left_stick_x + gamepad1.right_stick_x) * (-speedAdjust / 10));
     }
 
-    private void  driveClaws()
-    {
+    private void driveClaws() {
         // slew the servo, according to the rampUp (direction) variable.
-        if (position!=MAX_POS && gamepad1.y)
-        {
+        if (position != MAX_POS && gamepad1.y) {
             // Keep stepping up until we hit the max value.
-            position += INCREMENT ;
-            if (position >= MAX_POS )
-            {
+            position += INCREMENT;
+            if (position >= MAX_POS) {
                 position = MAX_POS;
             }
-        }
-        else if (position != MIN_POS && gamepad1.a)
-        {
+        } else if (position != MIN_POS && gamepad1.a) {
             // Keep stepping down until we hit the min value.
-            position -= INCREMENT ;
-            if (position <= MIN_POS )
-            {
+            position -= INCREMENT;
+            if (position <= MIN_POS) {
                 position = MIN_POS;
 
             }
@@ -316,20 +355,24 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         topClawServo.setPosition(position);
     }
 
-    private void  driveClawWrist()
-    {
+    private void driveClawWrist() {
         // slew the servo, according to the rampUp (direction) variable.
-        if ( gamepad1.right_bumper)
-        {
-            // Set the servo to the new position and pause;
-            leftClawWristServo.setPosition(0.6);
-            rightClawWristServo.setPosition(0.3);
-        }
-        else if (gamepad1.left_bumper)
-        {
-            // Set the servo to the new position and pause;
-            leftClawWristServo.setPosition(0.9);
-            rightClawWristServo.setPosition(0);        }
+        if (positionWrist != MAX_POS_WRIST && gamepad1.right_bumper) {
+            // Keep stepping up until we hit the max value.
+            positionWrist += INCREMENTWRIST;
+            if (positionWrist >= MAX_POS_WRIST) {
+                positionWrist = MAX_POS_WRIST;
+            }
+        } else if (positionWrist != MIN_POS_WRIST && gamepad1.left_bumper) {
+            // Keep stepping down until we hit the min value.
+            positionWrist -= INCREMENTWRIST;
+            if (positionWrist <= MIN_POS_WRIST) {
+                positionWrist = MIN_POS_WRIST;
 
+            }
+        }
+        // Set the servo to the new position and pause;
+        clawWristServo.setPosition(positionWrist);
     }
+
 }
