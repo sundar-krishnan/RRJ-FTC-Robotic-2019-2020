@@ -263,12 +263,12 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         leftClawWristServo = hardwareMap.get(Servo.class, "LeftClawWrist");
         leftClawWristServo.setDirection(Servo.Direction.FORWARD);
         positionWrist = leftClawWristServo.getPosition();
-        leftClawWristServo.setPosition(0.9);
+        leftClawWristServo.setPosition(1.0);
 
         rightClawWristServo = hardwareMap.get(Servo.class, "RightClawWrist");
         rightClawWristServo.setDirection(Servo.Direction.FORWARD);
         positionWrist = rightClawWristServo.getPosition();
-        rightClawWristServo.setPosition(0);
+        rightClawWristServo.setPosition(0.0);
     }
 
     private void driveBot()
@@ -328,8 +328,9 @@ public class RRJ_OpMode_Game2 extends LinearOpMode {
         else if (gamepad1.left_bumper)
         {
             // Set the servo to the new position and pause;
-            leftClawWristServo.setPosition(0.9);
-            rightClawWristServo.setPosition(0);        }
+            leftClawWristServo.setPosition(1.0);
+            rightClawWristServo.setPosition(0.0);
+        }
 
     }
 }
